@@ -7,6 +7,13 @@
 # Notes:
 #   - Nested variable interpolation (${A:-${B}}) requires podman-compose >= 1.6.0
 #
+# AJUSTES NEKO SERVER:
+#   - api-gw: indentacion corregida (era 4 espacios, colisionaba con studio)
+#   - api-gw: conectado a dokploy-network para que Traefik lo alcance
+#   - Datos de runtime movidos a named volumes (Dokploy hace clone limpio del repo
+#     en cada deploy, por lo que los bind mounts relativos se perderian)
+#   - Configuracion y scripts de init siguen como bind mounts (nacen del repo)
+#
 
 name: supabase
 
@@ -62,7 +69,9 @@ services:
       SNIPPETS_MANAGEMENT_FOLDER: /app/snippets
       EDGE_FUNCTIONS_MANAGEMENT_FOLDER: /app/edge-functions
     volumes:
-      - ./volumes/snippets:/app/snippets:z
+      # Named volume: los snippets se crean desde el Studio en runtime
+      - snippets:/app/snippets:z
+      # Bind mount de solo lectura: las functions se versionan en el repo
       - ./volumes/functions:/app/edge-functions:ro,z
 
   # Envoy is the default API gateway
@@ -78,6 +87,8 @@ services:
         aliases:
           - envoy
           - kong
+      # Red externa de Dokploy: permite que Traefik enrute hacia este contenedor
+      dokploy-network: {}
     healthcheck:
       # Using a TCP port check because this image does not include curl or wget.
       test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/127.0.0.1/8000'"]
@@ -390,14 +401,16 @@ services:
       S3_PROTOCOL_ACCESS_KEY_ID: ${S3_PROTOCOL_ACCESS_KEY_ID}
       S3_PROTOCOL_ACCESS_KEY_SECRET: ${S3_PROTOCOL_ACCESS_KEY_SECRET}
     volumes:
-      - ./volumes/storage:/var/lib/storage:z
+      # Named volume compartido con imgproxy
+      - storage-data:/var/lib/storage:z
 
   imgproxy:
     container_name: supabase-imgproxy
     image: darthsim/imgproxy:v3.30.1
     restart: unless-stopped
     volumes:
-      - ./volumes/storage:/var/lib/storage:z
+      # DEBE ser el mismo volumen que storage: imgproxy lee lo que storage escribe
+      - storage-data:/var/lib/storage:z
     healthcheck:
       test:
         [
@@ -437,6 +450,8 @@ services:
     image: supabase/edge-runtime:v1.74.0
     restart: unless-stopped
     volumes:
+      # Bind mount: las edge functions se versionan en el repo.
+      # Si prefieres editarlas desde el Studio, cambiar a named volume.
       - ./volumes/functions:/home/deno/functions:z
       - deno-cache:/root/.cache/deno
     depends_on:
@@ -479,6 +494,7 @@ services:
     image: supabase/postgres:17.6.1.136
     restart: unless-stopped
     volumes:
+      # --- Scripts de init: bind mounts, nacen del repo ---
       - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:Z
       # Must be superuser to create event trigger
       - ./volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
@@ -486,14 +502,14 @@ services:
       - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
       # Initialize the database settings with JWT_SECRET and JWT_EXP
       - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:Z
-      # PGDATA directory is persisted between restarts
-      - ./volumes/db/data:/var/lib/postgresql/data:Z
       # Changes required for internal supabase data such as _analytics
       - ./volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:Z
       # Changes required for Analytics support
       - ./volumes/db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
       # Changes required for Pooler support
       - ./volumes/db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:Z
+      # --- Datos: named volumes, sobreviven al clone limpio de Dokploy ---
+      - db-data:/var/lib/postgresql/data:Z
       # Use named volume to persist pgsodium decryption key between restarts
       - db-config:/etc/postgresql-custom
     healthcheck:
@@ -534,6 +550,7 @@ services:
     image: supabase/supavisor:2.9.5
     restart: unless-stopped
     ports:
+      # NOTA: expone Postgres en la LAN. Considerar quitar cuando no se necesite.
       - ${POSTGRES_PORT}:5432
       - ${POOLER_PROXY_PORT_TRANSACTION}:6543
     volumes:
@@ -585,3 +602,13 @@ services:
 volumes:
   db-config:
   deno-cache:
+  # Agregados: datos de runtime que deben sobrevivir al clone limpio de Dokploy
+  db-data:
+  storage-data:
+  snippets:
+
+networks:
+  # Red creada por Dokploy donde vive Traefik.
+  # api-gw se conecta aqui para poder recibir trafico enrutado por dominio.
+  dokploy-network:
+    external: true
