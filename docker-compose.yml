@@ -13,9 +13,17 @@
 #   - Datos de runtime movidos a named volumes (Dokploy hace clone limpio del repo
 #     en cada deploy, por lo que los bind mounts relativos se perderian)
 #   - Configuracion y scripts de init siguen como bind mounts (nacen del repo)
+#   - db-migrate: aplica migraciones y seeds de projects/ en cada deploy
+#     (docs/specs/neko-estandar-migraciones.md)
+#   - PGRST_DB_SCHEMAS fijo en este archivo (x-pgrst-db-schemas), no en el .env
 #
 
 name: supabase
+
+# Schemas expuestos por PostgREST y Studio. Vive aqui y no en el .env para que
+# exponer el schema de un producto quede en el historial del repositorio.
+# Al dar de alta un producto se agrega su schema al final.
+x-pgrst-db-schemas: &pgrst-db-schemas public,graphql_public,food
 
 services:
 
@@ -47,7 +55,7 @@ services:
       POSTGRES_USER_READ_WRITE: postgres
 
       PG_META_CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
-      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS}
+      PGRST_DB_SCHEMAS: *pgrst-db-schemas
       PGRST_DB_MAX_ROWS: ${PGRST_DB_MAX_ROWS:-1000}
       PGRST_DB_EXTRA_SEARCH_PATH: ${PGRST_DB_EXTRA_SEARCH_PATH:-public}
 
@@ -265,6 +273,10 @@ services:
       db:
         # Disable this if you are using an external Postgres database
         condition: service_healthy
+      # PostgREST arranca con los schemas de los productos ya creados. Si una
+      # migracion falla, el deploy queda en error y se ve en Dokploy.
+      db-migrate:
+        condition: service_completed_successfully
     healthcheck:
       test: [ "CMD", "postgrest", "--ready" ]
       interval: 5s
@@ -272,7 +284,7 @@ services:
       retries: 3
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS}
+      PGRST_DB_SCHEMAS: *pgrst-db-schemas
       PGRST_DB_MAX_ROWS: ${PGRST_DB_MAX_ROWS:-1000}
       PGRST_DB_EXTRA_SEARCH_PATH: ${PGRST_DB_EXTRA_SEARCH_PATH:-public}
       PGRST_DB_ANON_ROLE: anon
@@ -543,6 +555,29 @@ services:
         "-c",
         "log_min_messages=fatal" # prevents Realtime polling queries from appearing in logs
       ]
+
+  # Migraciones y seeds de los productos (projects/<slug>/). Corre una vez por
+  # deploy y termina. Usa la misma imagen que db porque trae psql y bash.
+  db-migrate:
+    container_name: supabase-db-migrate
+    image: supabase/postgres:17.6.1.136
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./migrate:/migrate:ro,z
+      - ./projects:/projects:ro,z
+    environment:
+      PGHOST: ${POSTGRES_HOST}
+      PGPORT: ${POSTGRES_PORT}
+      PGDATABASE: ${POSTGRES_DB}
+      # postgres por defecto. Si una migracion necesita superusuario (por
+      # ejemplo, politicas sobre storage.objects), usar supabase_admin.
+      PGUSER: ${MIGRATE_DB_USER:-postgres}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PROJECTS_DIR: /projects
+    entrypoint: ["bash", "/migrate/migrate.sh"]
 
   # Update the DATABASE_URL if you are using an external Postgres database
   supavisor:

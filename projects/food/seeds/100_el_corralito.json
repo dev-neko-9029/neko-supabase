@@ -1,0 +1,123 @@
+{
+  "restaurant": {
+    "slug": "el-corralito",
+    "name": "El Corralito",
+    "tagline": "Múltiple de Sabores",
+    "menu_name": "Menú Almuerzos",
+    "logo_path": null,
+    "table_count": 20,
+    "latitude": null,
+    "longitude": null,
+    "show_on_home": true,
+    "whatsapp": null,
+    "tiktok_profile": null,
+    "status": "published"
+  },
+  "payment": null,
+  "tiktok_videos": [],
+  "categories": [
+    {
+      "name": "Entradas",
+      "items": [
+        { "name": "Chorizo", "description": "Acompañado con patacones y suero.", "price_cop": 15000 },
+        { "name": "Patacones con ahogado", "price_cop": 12000 },
+        { "name": "Luna del Río", "description": "Ruleta con butifarra, yuca, patacones, chorizo, ahogado y suero.", "price_cop": 35000, "is_new": true }
+      ]
+    },
+    {
+      "name": "Calderitos",
+      "items": [
+        { "name": "Posta cartagenera", "description": "Posta, arroz de fideo o coco, plátano en tentación y ensalada.", "price_cop": 32000 },
+        { "name": "Carne desmechada", "description": "Carne, arroz de fideo o coco, patacones y ensalada.", "price_cop": 28000 },
+        { "name": "Gallina en zumo de coco", "description": "Gallina, arroz frito, patacones, ensalada y sopas de gallina.", "price_cop": 35000 },
+        { "name": "Carnero en zumo de coco", "description": "Carnero, arroz frito, patacones y ensalada.", "price_cop": 38000 }
+      ]
+    },
+    {
+      "name": "Frijolada y calderito paisa",
+      "items": [
+        { "name": "Frijolada Corralito", "description": "Arroz, chorizo, chicharrón al barril, carne molida, maduro, maicito, aguacate y huevo frito.", "price_cop": 40000, "is_new": true },
+        { "name": "Calderito paisa", "description": "Arroz, chorizo, chicharrón al barril, carne molida, maduro, maicito, aguacate y huevo frito.", "price_cop": 38000, "is_new": true }
+      ]
+    },
+    {
+      "name": "Pescados",
+      "note": "Se acompañan de arroz, patacones y ensalada o aguacate.",
+      "items": [
+        { "name": "Mojarra roja", "price_cop": 36000 },
+        { "name": "Sierra", "price_cop": 38000 },
+        { "name": "Corvina", "description": "Con arroz, patacones y ensalada.", "price_cop": 40000 },
+        { "name": "Mojarra en zumo de coco", "description": "Con arroz, patacones y aguacate.", "price_cop": 40000, "is_new": true }
+      ]
+    },
+    {
+      "name": "Corralito del día",
+      "items": [
+        { "name": "Corralito del día", "description": "Proteína, arroz de fideos, tajada amarilla y ensalada.", "price_cop": 20000 }
+      ]
+    },
+    {
+      "name": "Sancocho ollitas",
+      "note": "Se acompañan de arroz y tajada amarilla.",
+      "items": [
+        { "name": "Mondongo", "price_cop": 25000 },
+        { "name": "Carne salada", "price_cop": 28000 },
+        { "name": "Mote de queso", "price_cop": 30000 }
+      ]
+    },
+    {
+      "name": "Miti-miti",
+      "items": [
+        { "name": "Dos sopas a tu elección", "description": "Carne salada, gallina, mote de queso o mondongo. Con arroz y tajada amarilla.", "price_cop": 38000 },
+        { "name": "Miti-miti de mote de queso", "description": "Mote de queso con arroz de cerdo apastelado y tajadas maduras.", "price_cop": 40000, "is_new": true },
+        { "name": "Miti-miti de frijoles", "description": "Frijoles con pata de cerdo, carne desmechada, arroz, tajada y aguacate.", "price_cop": 40000, "is_new": true }
+      ]
+    },
+    {
+      "name": "Menú infantil",
+      "items": [
+        { "name": "Pechuga infantil", "description": "Con papas a la francesa y agua de panela.", "price_cop": 20000 }
+      ]
+    },
+    {
+      "name": "Adiciones",
+      "items": [
+        { "name": "Patacones", "price_cop": 5000 },
+        { "name": "Arroz", "price_cop": 5000 },
+        { "name": "Papas a la francesa", "price_cop": 5000 },
+        { "name": "Chorizo", "price_cop": 7000 },
+        { "name": "Chicharrón", "price_cop": 10000 },
+        { "name": "Proteína", "price_cop": 12000 }
+      ]
+    },
+    {
+      "name": "Bebidas",
+      "items": [
+        {
+          "name": "Agua de panela",
+          "variants": [
+            { "name": "Jarra grande", "price_cop": 15000 },
+            { "name": "Jarra mediana", "price_cop": 10000 },
+            { "name": "Vaso", "price_cop": 3000 }
+          ]
+        },
+        { "name": "Jugos", "description": "Maracuyá o corozo.", "price_cop": 12000 },
+        {
+          "name": "Limonada",
+          "variants": [
+            { "name": "Natural", "price_cop": 12000 },
+            { "name": "Cerezada", "price_cop": 15000 }
+          ]
+        },
+        {
+          "name": "Cerveza",
+          "variants": [
+            { "name": "Costeñita", "price_cop": 4000 },
+            { "name": "Club Colombia", "price_cop": 6000 }
+          ]
+        },
+        { "name": "Neverita de Costeñita x 6", "price_cop": 24000 }
+      ]
+    }
+  ]
+}
